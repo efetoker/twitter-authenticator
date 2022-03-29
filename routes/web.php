@@ -21,8 +21,8 @@ $router->get('/start-auth', function () use ($router) {
         $connection = new TwitterOAuth(env('consumer_key', true), env('consumer_secret', true));
         $request_token = $connection->oauth('oauth/request_token', array('oauth_callback' => env('oauth_callback', true)));
         $url = $connection->url('oauth/authorize', array('oauth_token' => $request_token['oauth_token']));
-        echo $url;
-        header("Location: ".$url);
+
+        return redirect()->to($url);
     } catch (Exception $e) {
         $res->setResponse(["status" => false, "code" => 500, "message" => $e->getMessage()]);
     }
