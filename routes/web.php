@@ -30,19 +30,22 @@ $router->get('/start-auth', function () use ($router) {
 });
 
 $router->get('/callback', function (Request $req) use ($router) {
-    $res = new JSONResponse();
     $db = new DbController();
 
     $connection = new TwitterOAuth(env('consumer_key', true), env('consumer_secret', true));
     $access_token = $connection->oauth("oauth/access_token", ["oauth_token" => $req->get("oauth_token"), "oauth_verifier" => $req->get("oauth_verifier")]);
 
     if(isset($access_token["oauth_token"]) && isset($access_token["oauth_token_secret"])){
-        echo print_r($db->addAccount(json_encode($access_token)), true);
-    }else{
-        $res->setResponse(["status" => false, "code" => 400, "message" => "Invalid request"]);
-    }
+        $res = $db->addAccount(json_encode($access_token));
 
-    return $res;
+        if($res->getResponse()["status"]){
+            echo "Account successfully added! <br /><br />Redirecting in 5 secs...";
+            header( "refresh:5;url=/" );
+        }else{
+            echo "Something went wrong! <br /> (" . $res->getResponse()["message"] . ") <br /><br />Redirecting in 5 secs...";
+            header( "refresh:5;url=/" );
+        }
+    }
 });
 
 $router->get('/accounts', function () use ($router) {
