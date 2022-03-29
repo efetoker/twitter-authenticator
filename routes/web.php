@@ -1,18 +1,96 @@
 <?php
 
-/** @var \Laravel\Lumen\Routing\Router $router */
+use Abraham\TwitterOAuth\TwitterOAuth;
+use App\Http\Controllers\DbController;
+use App\Http\Controllers\HelperController;
+use App\Http\Controllers\TwController;
+use App\Models\JSONResponse;
+use Illuminate\Http\Request;
+use Laravel\Lumen\Routing\Router;
 
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register all of the routes for an application.
-| It is a breeze. Simply tell Lumen the URIs it should respond to
-| and give it the Closure to call when that URI is requested.
-|
-*/
+/** @var Router $router */
 
 $router->get('/', function () use ($router) {
-    return $router->app->version();
+    return "Hello world!";
+});
+
+$router->get('/start-auth', function () use ($router) {
+    $res = new JSONResponse();
+
+    try{
+        $connection = new TwitterOAuth(env('consumer_key', true), env('consumer_secret', true));
+        $request_token = $connection->oauth('oauth/request_token', array('oauth_callback' => env('oauth_callback', true)));
+        $url = $connection->url('oauth/authorize', array('oauth_token' => $request_token['oauth_token']));
+        header("Location: ".$url);
+    } catch (Exception $e) {
+        $res->setResponse(["status" => false, "code" => 500, "message" => $e->getMessage()]);
+    }
+
+    return $res;
+});
+
+$router->get('/callback', function (Request $req) use ($router) {
+    $res = new JSONResponse();
+    $db = new DbController();
+
+    $connection = new TwitterOAuth(env('consumer_key', true), env('consumer_secret', true));
+    $access_token = $connection->oauth("oauth/access_token", ["oauth_token" => $req->get("oauth_token"), "oauth_verifier" => $req->get("oauth_verifier")]);
+
+    if(isset($access_token["oauth_token"]) && isset($access_token["oauth_token_secret"])){
+        echo print_r($db->addAccount(json_encode($access_token)), true);
+    }else{
+        $res->setResponse(["status" => false, "code" => 400, "message" => "Invalid request"]);
+    }
+
+    return $res;
+});
+
+$router->get('/accounts', function () use ($router) {
+    $db = new DbController();
+    return response()->json($db->getAccounts()->getAsArray());
+});
+
+$router->get('/account/{id}/verify', function (Request $req, $id) use ($router) {
+    $res = new JSONResponse();
+    $db = new DbController();
+    $tw = new TwController();
+
+    $account = (array)$db->getAccount($id)->getData()[0];
+    $data = (array)$tw->verify($account["oauth_token"], $account["oauth_token_secret"]);
+
+    if(isset($data["id"])){
+        $res->setResponse(["status" => true, "code" => 200, "message" => "Account verified", "data" => $data]);
+    }else{
+        $res->setResponse(["status" => false, "code" => 500, "message" => $data["errors"] && $data["errors"][0] ? $data["errors"][0]["message"] : "Unknown error"]);
+    }
+
+    return response()->json($res->getAsArray());
+});
+
+$router->post('/account', function (Request $req) use ($router) {
+    $helper = new HelperController();
+    $db = new DbController();
+    $json = new JSONResponse();
+
+    if(!$helper->isValidForAuthentication($req->getContent())) {
+        $json->setResponse(["status" => true, "code" => 400]);
+    }else{
+        $json = $db->addAccount($req->getContent());
+    }
+
+    return response()->json($json->getAsArray());
+});
+
+$router->delete('/account/{id}', function (Request $req, $id) use ($router) {
+    $helper = new HelperController();
+    $db = new DbController();
+    $json = new JSONResponse();
+
+    if(!$id){
+        $json->setResponse(["status" => false, "code" => 400]);
+    }else{
+        $json = $db->deleteAccount($id);
+    }
+
+    return response()->json($json->getAsArray());
 });
