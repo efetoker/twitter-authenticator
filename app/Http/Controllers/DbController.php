@@ -36,7 +36,16 @@ class DbController extends Controller
             $res = app('db')->select("SELECT * FROM secrets");
 
             if ($res) {
-                $resp->setData($res);
+                $resp->setData(array_map(function($item){
+                    $tw = new TwController();
+
+                    return [
+                        "oauth_token" => $item->oauth_token,
+                        "oauth_token_secret" => $item->oauth_token_secret,
+                        "id" => $item->id,
+                        "username" => $tw->verify($item->oauth_token, $item->oauth_token_secret)->screen_name
+                    ];
+                }, $res));
                 $resp->setResponse(["status" => true, "code" => 200, "message" => "Successfully retrieved accounts from DB."]);
             }else{
                 $resp->setResponse(["status" => false, "code" => 200, "message" => "No accounts found in DB."]);
