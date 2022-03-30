@@ -43,7 +43,8 @@ class DbController extends Controller
                         "oauth_token" => $item->oauth_token,
                         "oauth_token_secret" => $item->oauth_token_secret,
                         "id" => $item->id,
-                        "username" => $tw->verify($item->oauth_token, $item->oauth_token_secret)->screen_name
+                        "username" => $tw->verify($item->oauth_token, $item->oauth_token_secret)->screen_name,
+                        "image" => $tw->verify($item->oauth_token, $item->oauth_token_secret)->profile_image_url_https
                     ];
                 }, $res));
                 $resp->setResponse(["status" => true, "code" => 200, "message" => "Successfully retrieved accounts from DB."]);
