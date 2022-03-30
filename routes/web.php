@@ -63,7 +63,8 @@ $router->get('/account/{id}/verify', function (Request $req, $id) use ($router) 
     $data = (array)$tw->verify($account["oauth_token"], $account["oauth_token_secret"]);
 
     if(isset($data["id"])){
-        $res->setResponse(["status" => true, "code" => 200, "message" => "Account verified", "data" => $data]);
+        $res->setData($data);
+        $res->setResponse(["status" => true, "code" => 200, "message" => "Account verified"]);
     }else{
         $res->setResponse(["status" => false, "code" => 500, "message" => $data["errors"] && $data["errors"][0] ? $data["errors"][0]["message"] : "Unknown error"]);
     }
@@ -80,6 +81,133 @@ $router->post('/account', function (Request $req) use ($router) {
         $json->setResponse(["status" => true, "code" => 400]);
     }else{
         $json = $db->addAccount($req->getContent());
+    }
+
+    return response()->json($json->getAsArray());
+});
+
+$router->post('/like/{tweetId}', function (Request $req, $tweetId) use ($router) {
+    $tw = new TwController();
+    $json = new JSONResponse();
+
+    $data = (array)$tw->like(json_decode($req->getContent(), true)["oauth_token"], json_decode($req->getContent(), true)["oauth_token_secret"], $tweetId);
+
+    if(isset($data["created_at"])){
+        $json->setData($data);
+        $json->setResponse(["status" => true, "code" => 200, "message" => "Tweet liked"]);
+    }else{
+        $errorMessage = null;
+
+        if(isset($data["errors"]) && isset($data["errors"][0])){
+            $arr = (array)$data["errors"][0];
+            $errorMessage = $arr["message"];
+        }else{
+            $errorMessage = "Unknown error";
+        }
+
+        $json->setResponse(["status" => false, "code" => 500, "message" => $errorMessage]);
+    }
+
+    return response()->json($json->getAsArray());
+});
+
+$router->post('/unlike/{tweetId}', function (Request $req, $tweetId) use ($router) {
+    $tw = new TwController();
+    $json = new JSONResponse();
+
+    $data = (array)$tw->unlike(json_decode($req->getContent(), true)["oauth_token"], json_decode($req->getContent(), true)["oauth_token_secret"], $tweetId);
+
+    if(isset($data["created_at"])){
+        $json->setData($data);
+        $json->setResponse(["status" => true, "code" => 200, "message" => "Tweet liked"]);
+    }else{
+        $errorMessage = null;
+
+        if(isset($data["errors"]) && isset($data["errors"][0])){
+            $arr = (array)$data["errors"][0];
+            $errorMessage = $arr["message"];
+        }else{
+            $errorMessage = "Unknown error";
+        }
+
+        $json->setResponse(["status" => false, "code" => 500, "message" => $errorMessage]);
+    }
+
+    return response()->json($json->getAsArray());
+});
+
+$router->post('/retweet/{tweetId}', function (Request $req, $tweetId) use ($router) {
+    $tw = new TwController();
+    $json = new JSONResponse();
+
+    $data = (array)$tw->retweet(json_decode($req->getContent(), true)["oauth_token"], json_decode($req->getContent(), true)["oauth_token_secret"], $tweetId);
+
+    if(isset($data["created_at"])){
+        $json->setData($data);
+        $json->setResponse(["status" => true, "code" => 200, "message" => "Tweet liked"]);
+    }else{
+        $errorMessage = null;
+
+        if(isset($data["errors"]) && isset($data["errors"][0])){
+            $arr = (array)$data["errors"][0];
+            $errorMessage = $arr["message"];
+        }else{
+            $errorMessage = "Unknown error";
+        }
+
+        $json->setResponse(["status" => false, "code" => 500, "message" => $errorMessage]);
+    }
+
+    return response()->json($json->getAsArray());
+});
+
+$router->post('/unretweet/{tweetId}', function (Request $req, $tweetId) use ($router) {
+    $tw = new TwController();
+    $json = new JSONResponse();
+
+    $data = (array)$tw->unretweet(json_decode($req->getContent(), true)["oauth_token"], json_decode($req->getContent(), true)["oauth_token_secret"], $tweetId);
+
+    if(isset($data["created_at"])){
+        $json->setData($data);
+        $json->setResponse(["status" => true, "code" => 200, "message" => "Tweet retweeted"]);
+    }else{
+        $errorMessage = null;
+
+        if(isset($data["errors"]) && isset($data["errors"][0])){
+            $arr = (array)$data["errors"][0];
+            $errorMessage = $arr["message"];
+        }else{
+            $errorMessage = "Unknown error";
+        }
+
+        $json->setResponse(["status" => false, "code" => 500, "message" => $errorMessage]);
+    }
+
+    return response()->json($json->getAsArray());
+});
+
+$router->post('/reply/{tweetId}', function (Request $req, $tweetId) use ($router) {
+    $tw = new TwController();
+    $json = new JSONResponse();
+
+    $tweet = $tw->get_tweet(json_decode($req->getContent(), true)["oauth_token"], json_decode($req->getContent(), true)["oauth_token_secret"], $tweetId);
+
+    $data = (array)$tw->reply(json_decode($req->getContent(), true)["oauth_token"], json_decode($req->getContent(), true)["oauth_token_secret"], $tweetId, "@" . $tweet->user->screen_name . " " .json_decode($req->getContent(), true)["text"]);
+
+    if(isset($data["created_at"])){
+        $json->setData($data);
+        $json->setResponse(["status" => true, "code" => 200, "message" => "Replied successfully."]);
+    }else{
+        $errorMessage = null;
+
+        if(isset($data["errors"]) && isset($data["errors"][0])){
+            $arr = (array)$data["errors"][0];
+            $errorMessage = $arr["message"];
+        }else{
+            $errorMessage = "Unknown error";
+        }
+
+        $json->setResponse(["status" => false, "code" => 500, "message" => $errorMessage]);
     }
 
     return response()->json($json->getAsArray());
