@@ -58,7 +58,11 @@ $app->singleton(
 | the default version. You may register other files below as needed.
 |
 */
-
+$app->register(Fruitcake\Cors\CorsServiceProvider::class);
+$app->configure('cors');
+$app->middleware([
+    Fruitcake\Cors\HandleCors::class,
+]);
 $app->configure('app');
 
 /*
