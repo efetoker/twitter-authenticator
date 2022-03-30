@@ -54,6 +54,31 @@ $router->get('/accounts', function () use ($router) {
     return response()->json($db->getAccounts()->getAsArray());
 });
 
+$router->get('/tweet/{id}/{token}/{secret}', function (Request $req, $id, $token, $secret) use ($router) {
+    $res = new JSONResponse();
+    $tw = new TwController();
+
+    $tweet = (array)$tw->get_tweet($token, $secret, $id);
+
+    if(isset($tweet["id"])){
+        $res->setData($tweet);
+        $res->setResponse(["status" => true, "code" => 200, "message" => "Account verified"]);
+    }else{
+        $errorMessage = null;
+
+        if(isset($tweet["errors"]) && isset($tweet["errors"][0])){
+            $arr = (array)$tweet["errors"][0];
+            $errorMessage = $arr["message"];
+        }else{
+            $errorMessage = "Unknown error";
+        }
+
+        $res->setResponse(["status" => false, "code" => 500, "message" => $errorMessage]);
+    }
+
+    return $res;
+});
+
 $router->get('/account/{id}/verify', function (Request $req, $id) use ($router) {
     $res = new JSONResponse();
     $db = new DbController();
