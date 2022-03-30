@@ -23,13 +23,11 @@ $router->get('/start-auth', function () use ($router) {
         $url = $connection->url('oauth/authorize', array('oauth_token' => $request_token['oauth_token']));
 
         return redirect()->to($url);
-
-        echo "If you are not redirected, please click <a href='$url'>here</a>";
     } catch (Exception $e) {
         $res->setResponse(["status" => false, "code" => 500, "message" => $e->getMessage()]);
     }
 
-    return $res;
+    return $url ? "If you are not redirected, please click <a href='$url'>here</a>" : $res;
 });
 
 $router->get('/callback', function (Request $req) use ($router) {
