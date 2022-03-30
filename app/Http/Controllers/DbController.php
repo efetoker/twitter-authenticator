@@ -39,14 +39,10 @@ class DbController extends Controller
                 $resp->setData(array_map(function($item){
                     $tw = new TwController();
 
-                    echo print_r($tw->verify($item->oauth_token, $item->oauth_token_secret), true);
-
                     return [
                         "oauth_token" => $item->oauth_token,
                         "oauth_token_secret" => $item->oauth_token_secret,
-                        "id" => $item->id,
-                        "username" => $tw->verify($item->oauth_token, $item->oauth_token_secret)->screen_name,
-                        "image" => $tw->verify($item->oauth_token, $item->oauth_token_secret)->profile_image_url_https
+                        "id" => $item->id
                     ];
                 }, $res));
                 $resp->setResponse(["status" => true, "code" => 200, "message" => "Successfully retrieved accounts from DB."]);
