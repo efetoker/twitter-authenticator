@@ -39,6 +39,8 @@ class DbController extends Controller
                 $resp->setData(array_map(function($item){
                     $tw = new TwController();
 
+                    echo print_r($tw->verify($item->oauth_token, $item->oauth_token_secret), true);
+
                     return [
                         "oauth_token" => $item->oauth_token,
                         "oauth_token_secret" => $item->oauth_token_secret,
