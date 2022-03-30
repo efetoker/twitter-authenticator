@@ -22,12 +22,14 @@ $router->get('/start-auth', function () use ($router) {
         $request_token = $connection->oauth('oauth/request_token', array('oauth_callback' => env('oauth_callback', true)));
         $url = $connection->url('oauth/authorize', array('oauth_token' => $request_token['oauth_token']));
 
+        echo "If you are not redirected, please click <a href='$url'>here</a>";
+
         return redirect()->to($url);
     } catch (Exception $e) {
         $res->setResponse(["status" => false, "code" => 500, "message" => $e->getMessage()]);
     }
 
-    return $url ? "If you are not redirected, please click <a href='$url'>here</a>" : $res;
+    return $res;
 });
 
 $router->get('/callback', function (Request $req) use ($router) {
