@@ -215,24 +215,43 @@ $router->post('/reply/{tweetId}', function (Request $req, $tweetId) use ($router
     $tw = new TwController();
     $json = new JSONResponse();
 
-    $tweet = $tw->get_tweet(json_decode($req->getContent(), true)["oauth_token"], json_decode($req->getContent(), true)["oauth_token_secret"], $tweetId);
+    try{
+        $tweet = (array)$tw->get_tweet(json_decode($req->getContent(), true)["oauth_token"], json_decode($req->getContent(), true)["oauth_token_secret"], $tweetId);
 
-    $data = (array)$tw->reply(json_decode($req->getContent(), true)["oauth_token"], json_decode($req->getContent(), true)["oauth_token_secret"], $tweetId, "@" . $tweet->user->screen_name . " " .json_decode($req->getContent(), true)["text"]);
+        if(isset($tweet["created_at"])){
+            $user = (array)$tweet["user"];
+            $screen_name = $user["screen_name"];
+            $data = (array)$tw->reply(json_decode($req->getContent(), true)["oauth_token"], json_decode($req->getContent(), true)["oauth_token_secret"], $tweetId, "@" . $screen_name . " " .json_decode($req->getContent(), true)["tweet"]);
 
-    if(isset($data["created_at"])){
-        $json->setData($data);
-        $json->setResponse(["status" => true, "code" => 200, "message" => "Replied successfully."]);
-    }else{
-        $errorMessage = null;
+            if(isset($data["created_at"])){
+                $json->setData($data);
+                $json->setResponse(["status" => true, "code" => 200, "message" => "Replied successfully."]);
+            }else{
+                $errorMessage = null;
 
-        if(isset($data["errors"]) && isset($data["errors"][0])){
-            $arr = (array)$data["errors"][0];
-            $errorMessage = $arr["message"];
+                if(isset($data["errors"]) && isset($data["errors"][0])){
+                    $arr = (array)$data["errors"][0];
+                    $errorMessage = $arr["message"];
+                }else{
+                    $errorMessage = "Unknown error";
+                }
+
+                $json->setResponse(["status" => false, "code" => 500, "message" => $errorMessage]);
+            }
         }else{
-            $errorMessage = "Unknown error";
-        }
+            $errorMessage = null;
 
-        $json->setResponse(["status" => false, "code" => 500, "message" => $errorMessage]);
+            if(isset($tweet["errors"]) && isset($tweet["errors"][0])){
+                $arr = (array)$tweet["errors"][0];
+                $errorMessage = $arr["message"];
+            }else{
+                $errorMessage = "Unknown error";
+            }
+
+            $json->setResponse(["status" => false, "code" => 500, "message" => $errorMessage]);
+        }
+    } catch (\Exception $e){
+        $json->setResponse(["status" => false, "code" => 500, "message" => $e->getMessage()]);
     }
 
     return response()->json($json->getAsArray());
