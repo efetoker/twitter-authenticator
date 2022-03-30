@@ -76,7 +76,7 @@ $router->get('/tweet/{id}/{token}/{secret}', function (Request $req, $id, $token
         $res->setResponse(["status" => false, "code" => 500, "message" => $errorMessage]);
     }
 
-    return $res;
+    return response()->json($res->getAsArray());
 });
 
 $router->get('/account/{id}/verify', function (Request $req, $id) use ($router) {
