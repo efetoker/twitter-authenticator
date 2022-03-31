@@ -11,7 +11,7 @@ use Laravel\Lumen\Routing\Router;
 /** @var Router $router */
 
 $router->get('/', function () use ($router) {
-    return "Hello world!";
+    header( "url=https://shill-a-tweet.herokuapp.com/" );
 });
 
 $router->get('/start-auth', function () use ($router) {
