@@ -40,11 +40,11 @@ $router->get('/callback', function (Request $req) use ($router) {
         $res = $db->addAccount(json_encode($access_token));
 
         if($res->getResponse()["status"]){
-            echo "Account successfully added! <br /><br />Redirecting in 5 secs...";
-            header( "refresh:5;url=https://shill-a-tweet.herokuapp.com/" );
+            echo "Account successfully added! <br /><br />Redirecting in 1 secs...";
+            header( "refresh:1;url=https://shill-a-tweet.herokuapp.com/" );
         }else{
-            echo "Something went wrong! <br /> (" . $res->getResponse()["message"] . ") <br /><br />Redirecting in 5 secs...";
-            header( "refresh:5;url=https://shill-a-tweet.herokuapp.com/" );
+            echo "Something went wrong! <br /> (" . $res->getResponse()["message"] . ") <br /><br />Redirecting in 1 secs...";
+            header( "refresh:1;url=https://shill-a-tweet.herokuapp.com/" );
         }
     }
 });
